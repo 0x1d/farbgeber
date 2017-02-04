@@ -2,6 +2,7 @@
 # coding=utf-8
 
 import time
+import struct
 import paho.mqtt.client as mqtt
 from time import gmtime, strftime
 from colour import Color
@@ -61,7 +62,7 @@ def generate_html_output(base_color, base_color_variant_1, base_color_variant_2,
     css4 = ".base_color_variant_3 { background-color:" + base_color_variant_3.hex + "; width:100%; height:40px; padding: 40px; font-size:20px; } \n\r"
     css5 = ".base_color_variant_4 { background-color:" + base_color_variant_4.hex + "; width:50%; height:40px; padding: 40px; font-size:20px; } \n\r"
     css6 = ".Contrastcolor { background-color:" + contrast_color.hex + "; width:10%; height:900px; position:absolute; right:300px; top:0px; color:" + base_color.hex + "; padding: 40px; font-size:20px; } \n"
-    f = open('output1.html', 'w')
+    f = open('/home/coon/public_html/farbgeber.html', 'w')
     outputtxt = str(htmlpreface) + str(css1) + str(css2) + str(css3) + str(css4) + str(css5) + str(css6) + str(
         htmlcontent) + str(zeitzeile) + str(htmlclosing)
     f.write(outputtxt)
@@ -116,12 +117,20 @@ def generate_palette(time_value=0.0, base_saturation=1.0, base_luminance=0.4, hu
                                  base_color_variant_4, contrast_color, time_value)
 
         # publish on MQTT broker:
-        mc.publish(topic, "color/base/0/%s" % base_color.hex)
-        mc.publish(topic, "color/base/1/%s" % base_color_variant_1.hex)
-        mc.publish(topic, "color/base/2/%s" % base_color_variant_2.hex)
-        mc.publish(topic, "color/base/3/%s" % base_color_variant_3.hex)
-        mc.publish(topic, "color/base/4/%s" % base_color_variant_4.hex)
-        mc.publish(topic, "color/contrast/%s" % contrast_color.hex)
+
+        def packedColor(color):
+          return struct.pack("BBB", color.get_red() * 255, color.get_green() * 255, color.get_blue() * 255)
+
+        data  = "Binary:" + struct.pack("B", 0)
+        data += packedColor(base_color)
+        data += packedColor(base_color_variant_1)
+        data += packedColor(base_color_variant_2)
+        data += packedColor(base_color_variant_3)
+        data += packedColor(base_color_variant_4)
+        data += packedColor(contrast_color)
+
+        payload = bytearray(data)
+        mc.publish(topic, payload)
 
         program_cycles += + 1
         time.sleep(1)
