@@ -28,8 +28,8 @@
 
 // Update these with values suitable for your network.
 
-const char* ssid = "c-base-botnet";
-const char* password = "<secret>";
+const char* ssid = "<put ssid here>";
+const char* password = "<put password here>";
 const char* mqtt_server = "iot.eclipse.org";
 
 WiFiClient espClient;
@@ -66,24 +66,44 @@ void setup_wifi() {
   Serial.println(WiFi.localIP());
 }
 
+typedef struct Color {
+  unsigned char red;
+  unsigned char green;
+  unsigned char blue;
+} ;
+
+typedef struct ColorElements {
+  char pBinary[8];
+  Color base;
+  Color variant[4];
+  Color contrast;
+};
+
+void printColor(const char* pDescription, struct Color color) {
+  char pBuf[128];
+  snprintf(pBuf, sizeof(pBuf) - 1, 
+    "%s color: #%02X%02X%02X", pDescription, 
+    color.red, color.green, color.blue);
+  
+  Serial.println(pBuf);
+}
+
 void callback(char* topic, byte* payload, unsigned int length) {
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.print("] ");
-  for (int i = 0; i < length; i++) {
-    Serial.print((char)payload[i]);
-  }
-  Serial.println();
-
-  // Switch on the LED if an 1 was received as first character
-  if ((char)payload[0] == '1') {
-    digitalWrite(BUILTIN_LED, LOW);   // Turn the LED on (Note that LOW is the voltage level
-    // but actually the LED is on; this is because
-    // it is acive low on the ESP-01)
-  } else {
-    digitalWrite(BUILTIN_LED, HIGH);  // Turn the LED off by making the voltage HIGH
+  if (length != sizeof(ColorElements)) {
+    Serial.println("Invalid packet format!");
+       
+    return;
   }
 
+  Serial.println(topic);
+
+  const ColorElements* pColors = (ColorElements*)payload;
+  printColor("Base     ", pColors->base);
+  printColor("Variant 1", pColors->variant[0]);
+  printColor("Variant 2", pColors->variant[1]);
+  printColor("Variant 3", pColors->variant[2]);
+  printColor("Variant 4", pColors->variant[3]);
+  printColor("Contrast ", pColors->contrast);
 }
 
 void reconnect() {
@@ -96,7 +116,7 @@ void reconnect() {
       // Once connected, publish an announcement...
       client.publish("outTopic", "hello world");
       // ... and resubscribe
-      client.subscribe("c-base/#");
+      client.subscribe("c-base/farbgeber");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -117,9 +137,8 @@ void loop() {
   if (now - lastMsg > 2000) {
     lastMsg = now;
     ++value;
-    snprintf (msg, 75, "hello world #%ld", value);
-    Serial.print("Publish message: ");
+    snprintf (msg, 75, "Heartbeat #%ld", value);
     Serial.println(msg);
-    client.publish("outTopic", msg);
+    // client.publish("outTopic", msg);
   }
 }
