@@ -119,7 +119,12 @@ def generate_palette(time_value=0.0, base_saturation=1.0, base_luminance=0.4, hu
         # publish on MQTT broker:
 
         def packedColor(color):
-          return struct.pack("BBB", color.get_red() * 255, color.get_green() * 255, color.get_blue() * 255)
+            FLOAT_ERROR = 0.0000005
+
+            def colorToInt(c):
+                return int(c*255 + 0.5 - FLOAT_ERROR)
+
+            return struct.pack("BBB", colorToInt(color.get_red()), colorToInt(color.get_green()), colorToInt(color.get_blue()))
 
         data  = "Binary:" + struct.pack("B", 0)
         data += packedColor(base_color)
