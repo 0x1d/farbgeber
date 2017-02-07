@@ -25,20 +25,58 @@
 
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
+#include <Adafruit_NeoPixel.h>
+
+#define PIN D8
+#define NUM_LEDS 6 // 150
+#define NUM_GROUPS 6 // base + variant1,2,3,4 + contrast
+#define LEDS_PER_GROUP NUM_LEDS / NUM_GROUPS
 
 // Update these with values suitable for your network.
 
-const char* ssid = "<put ssid here>";
-const char* password = "<put password here>";
+const char* ssid = "<enter ssid here>";
+const char* password = "<enter password here>";
 const char* mqtt_server = "iot.eclipse.org";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, PIN, NEO_GRB + NEO_KHZ800);
 long lastMsg = 0;
 char msg[50];
 int value = 0;
 
+typedef struct Color {
+  unsigned char red;
+  unsigned char green;
+  unsigned char blue;
+} ;
+
+typedef struct ColorElements {
+  char pBinary[8];
+  Color base;
+  Color variant[4];
+  Color contrast;
+};
+
+void setLedGroupColor(int group, Color color) {
+  int startLed = group * LEDS_PER_GROUP;
+  int brightnessDivider = 32;
+
+  color.red   /= brightnessDivider;
+  color.green /= brightnessDivider;
+  color.blue  /= brightnessDivider;
+    
+  for(int i = startLed; i < startLed + LEDS_PER_GROUP; i++)    
+    strip.setPixelColor(i, strip.Color(color.red, color.green, color.blue));
+
+  strip.show();
+  delayMicroseconds(100); // avoid glichtes (do not set below 100us)
+}
+
 void setup() {
+  strip.begin();
+  strip.show(); // Initialize all pixels to 'off'
+    
   pinMode(BUILTIN_LED, OUTPUT);     // Initialize the BUILTIN_LED pin as an output
   Serial.begin(115200);
   setup_wifi();
@@ -66,19 +104,6 @@ void setup_wifi() {
   Serial.println(WiFi.localIP());
 }
 
-typedef struct Color {
-  unsigned char red;
-  unsigned char green;
-  unsigned char blue;
-} ;
-
-typedef struct ColorElements {
-  char pBinary[8];
-  Color base;
-  Color variant[4];
-  Color contrast;
-};
-
 void printColor(const char* pDescription, struct Color color) {
   char pBuf[128];
   snprintf(pBuf, sizeof(pBuf) - 1, 
@@ -104,28 +129,31 @@ void callback(char* topic, byte* payload, unsigned int length) {
   printColor("Variant 3", pColors->variant[2]);
   printColor("Variant 4", pColors->variant[3]);
   printColor("Contrast ", pColors->contrast);
+
+  setLedGroupColor(0, pColors->base);
+  setLedGroupColor(1, pColors->variant[0]);
+  setLedGroupColor(2, pColors->variant[1]);
+  setLedGroupColor(3, pColors->variant[2]);
+  setLedGroupColor(4, pColors->variant[3]);
+  setLedGroupColor(5, pColors->contrast);
 }
 
-void reconnect() {
-  // Loop until we're reconnected
+void reconnect() {  
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
-    // Attempt to connect
+    
     if (client.connect("farbgeber_client")) {
-      Serial.println("connected");
-      // Once connected, publish an announcement...
-      client.publish("outTopic", "hello world");
-      // ... and resubscribe
+      Serial.println("connected");      
       client.subscribe("c-base/farbgeber");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
       Serial.println(" try again in 5 seconds");
-      // Wait 5 seconds before retrying
       delay(5000);
     }
   }
 }
+
 void loop() {
 
   if (!client.connected()) {
@@ -139,6 +167,5 @@ void loop() {
     ++value;
     snprintf (msg, 75, "Heartbeat #%ld", value);
     Serial.println(msg);
-    // client.publish("outTopic", msg);
   }
 }
