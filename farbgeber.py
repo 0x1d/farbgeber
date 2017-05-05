@@ -114,18 +114,17 @@ class Farbgeber(msgflo.Participant):
             def colorToInt(c):
                 return int(c*255 + 0.5 - FLOAT_ERROR)
 
-            return struct.pack("BBB", colorToInt(color.get_red()), colorToInt(color.get_green()), colorToInt(color.get_blue()))
+            return [colorToInt(color.get_red()), colorToInt(color.get_green()), colorToInt(color.get_blue())]
 
-        data  = "Binary:" + struct.pack("B", 0)
-        data += packedColor(palette['base_color'])
-        data += packedColor(palette['base_color_variant_1'])
-        data += packedColor(palette['base_color_variant_2'])
-        data += packedColor(palette['base_color_variant_3'])
-        data += packedColor(palette['base_color_variant_4'])
-        data += packedColor(palette['contrast_color'])
+        data = dict()
+        data['base_color'] = packedColor(palette['base_color'])
+        data['base_color_variant_1'] = packedColor(palette['base_color_variant_1'])
+        data['base_color_variant_2'] = packedColor(palette['base_color_variant_2'])
+        data['base_color_variant_3'] = packedColor(palette['base_color_variant_3'])
+        data['base_color_variant_4'] = packedColor(palette['base_color_variant_4'])
+        data['contrast_color'] = packedColor(palette['contrast_color'])
 
-        payload = bytearray(data)
-        self.send('palette', palette)
+        self.send('palette', data)
 
 if __name__ == "__main__":
     print "Zentrale Farbgebeeinheit"
