@@ -8,10 +8,11 @@ from Tkinter import *
 import threading
 
 def generate_terminal_output(base_color, base_color_variant_1, base_color_variant_2, base_color_variant_3, base_color_variant_4, contrast_color, time_value, canvas=0, width=0, height=0):
-    w = width / 6.0
+    w = width / 12.0
+    x = width / 2 - w / 2
     y = int(time_value / 6)
 
-    canvas.create_line(0 * width, y, w, y, fill=base_color.hex)
+    canvas.create_line(x + 0 * width, y, x + w, y, fill=base_color.hex)
     canvas.update()
 
 def generate_palette(time_value=0.0, base_saturation=1.0, base_luminance=0.4, hue_modifier=0.03, lum_modifier=0.07, sat_modifier=0.2, program_cycles=0, canvas=0, width=0, height=0):
