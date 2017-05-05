@@ -7,43 +7,44 @@ import paho.mqtt.client as mqtt
 from time import gmtime, strftime
 from colour import Color
 
+MQTT_BROKER_ADDRESS = 'iot.eclipse.org'
+MQTT_PORT = 1883
+MQTT_CLIENT_ID = 'farbgeber'
+MQTT_TOPIC = 'c-base/farbgeber'
 
-# zentraler zeitgeber, sollte immer <3600 und >0 sein und integer raustun
-
-# The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, rc):
     print("Connected with result code " + str(rc))
-    # Subscribing in on_connect() means that if we lose the connection and
-    # reconnect then subscriptions will be renewed.
-    # client.subscribe("c-base/#")
     client.subscribe("c-base/#")
 
-    # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
     print(msg.topic + " " + str(msg.payload))
 
-def create_mqtt_publisher(broker_address, port, client_id, topic):
-  mc = mqtt.Client(client_id)
-  mc.on_connect = on_connect
-  mc.on_message = on_message
-  mc.connect(broker_address, port)
+def create_mqtt_publisher(broker_address, port, client_id):
+    mc = mqtt.Client(client_id)
+    mc.on_connect = on_connect
+    mc.on_message = on_message
+    mc.connect(broker_address, port)
+    return mc
 
-  return mc
-
-def generate_terminal_output(base_color, base_color_variant_1, base_color_variant_2, base_color_variant_3, base_color_variant_4, contrast_color, time_value):
-    print time_value
-    print "base_color ", base_color.hex
-    print "baseColorVariant1 ", base_color_variant_1.hex
-    print "baseColorVariant2 ", base_color_variant_2.hex
-    print "baseColorVariant3 ", base_color_variant_3.hex
-    print "baseColorVariant4 ", base_color_variant_4.hex
-    print "contrast_color ", contrast_color.hex
+def generate_terminal_output(palette):
+    print palette['time_value']
+    print "base_color ", palette['base_color'].hex
+    print "baseColorVariant1 ", palette['base_color_variant_1'].hex
+    print "baseColorVariant2 ", palette['base_color_variant_2'].hex
+    print "baseColorVariant3 ", palette['base_color_variant_3'].hex
+    print "baseColorVariant4 ", palette['base_color_variant_4'].hex
+    print "contrast_color ", palette['contrast_color'].hex
     print "###################################"
 
+def generate_html_output(palette):
+    time_value = palette['time_value']
+    base_color = palette['base_color']
+    base_color_variant_1 = palette['base_color_variant_1']
+    base_color_variant_2 = palette['base_color_variant_2']
+    base_color_variant_3 = palette['base_color_variant_3']
+    base_color_variant_4 = palette['base_color_variant_4']
+    contrast_color = palette['contrast_color']
 
-def generate_html_output(base_color, base_color_variant_1, base_color_variant_2, base_color_variant_3,
-                         base_color_variant_4, contrast_color, time_value):
-    # Weboutput
     htmlpreface = """<html><head><title>visuelle Ausgabeeinheit des zentralen Farbgebers</title><meta http-equiv="refresh" content="1" />
     <style type="text/css">
     """
@@ -68,78 +69,69 @@ def generate_html_output(base_color, base_color_variant_1, base_color_variant_2,
     f.write(outputtxt)
     f.close()
 
-def generate_palette(time_value=0.0, base_saturation=1.0, base_luminance=0.4, hue_modifier=0.03, lum_modifier=0.07,
-                     sat_modifier=0.2, program_cycles=0, output='html'):
-    print "zentrale Farbgebeeinheit"
+def generate_palette(base_saturation=1.0, base_luminance=0.4, hue_modifier=0.03, lum_modifier=0.07, sat_modifier=0.2): 
+    time_value = int(strftime("%M", gmtime())) * 60 + int(strftime("%S", gmtime()))
+    time_value = float(time_value)
 
-    broker_address = 'iot.eclipse.org'
-    port = 1883
-    client_id = 'farbgeber'
-    topic = 'c-base/farbgeber'
+    base_hue = time_value / 3600
+    base_color = Color(hsl=(base_hue, base_saturation, base_luminance))        
+    base_color_variant_1 = Color(hsl=(base_color.hue + hue_modifier, base_saturation - sat_modifier, base_luminance))
+    base_color_variant_2 = Color(hsl=(base_color.hue - hue_modifier, base_saturation - sat_modifier, base_luminance))
+    base_color_variant_3 = Color(hsl=(base_color.hue, base_saturation, base_luminance + lum_modifier))
+    base_color_variant_4 = Color(hsl=(base_color.hue, base_saturation, base_luminance - lum_modifier))
 
-    print "connecting to mqtt broker: %s:%d @ topic %s" % (broker_address,
-            port, topic)
+    base_degree = base_hue * 360
+    if base_degree < 180:
+        contrast_hue = base_degree + 180
+    else:
+        contrast_hue = base_degree - 180
+        
+    contrast_hue /= 360
+    contrast_color = Color(hsl=(contrast_hue, base_saturation - sat_modifier, (base_luminance + 0.2)))
 
-    mc = create_mqtt_publisher(broker_address, port, client_id, topic)
+    p = dict()
+    p['time_value'] = time_value
+    p['base_color'] = base_color        
+    p['base_color_variant_1'] = base_color_variant_1
+    p['base_color_variant_2'] = base_color_variant_2
+    p['base_color_variant_3'] = base_color_variant_3
+    p['base_color_variant_4'] = base_color_variant_4
+    p['contrast_color'] = contrast_color
+
+    return p
+
+def publish_mqtt(mc, palette):
+    def packedColor(color):
+        FLOAT_ERROR = 0.0000005
+
+        def colorToInt(c):
+            return int(c*255 + 0.5 - FLOAT_ERROR)
+
+        return struct.pack("BBB", colorToInt(color.get_red()), colorToInt(color.get_green()), colorToInt(color.get_blue()))
+
+    data  = "Binary:" + struct.pack("B", 0)
+    data += packedColor(palette['base_color'])
+    data += packedColor(palette['base_color_variant_1'])
+    data += packedColor(palette['base_color_variant_2'])
+    data += packedColor(palette['base_color_variant_3'])
+    data += packedColor(palette['base_color_variant_4'])
+    data += packedColor(palette['contrast_color'])
+
+    payload = bytearray(data)
+    mc.publish(MQTT_TOPIC, payload)
+
+if __name__ == "__main__":
+    print "Zentrale Farbgebeeinheit"
+    
+    mc = create_mqtt_publisher(MQTT_BROKER_ADDRESS, MQTT_PORT, MQTT_CLIENT_ID)
+    print "connecting to mqtt broker: %s:%d @ topic %s" % (MQTT_BROKER_ADDRESS, MQTT_PORT, MQTT_TOPIC)
 
     while True:
-        time_value = int(strftime("%M", gmtime())) * 60 + int(strftime("%S", gmtime()))
-        time_value = float(time_value)
+        palette = generate_palette()
+        generate_terminal_output(palette)
+        generate_html_output(palette)
+        publish_mqtt(mc, palette)
 
-        base_hue = time_value / 3600
-        base_color = Color(hsl=(base_hue, base_saturation, base_luminance))
-
-        base_color_variant_1 = Color(
-            hsl=(base_color.hue + hue_modifier, base_saturation - sat_modifier, base_luminance))
-        base_color_variant_2 = Color(
-            hsl=(base_color.hue - hue_modifier, base_saturation - sat_modifier, base_luminance))
-        base_color_variant_3 = Color(
-            hsl=(base_color.hue, base_saturation, base_luminance + lum_modifier))
-        base_color_variant_4 = Color(
-            hsl=(base_color.hue, base_saturation, base_luminance - lum_modifier))
-
-        base_degree = base_hue * 360
-        if base_degree < 180:
-            contrast_hue = base_degree + 180
-        else:
-            contrast_hue = base_degree - 180
-        contrast_hue /= 360
-
-        contrast_color = Color(hsl=(contrast_hue, base_saturation - sat_modifier, (base_luminance + 0.2)))
-
-        if output == 'term':
-            # Terminaloutput
-            generate_terminal_output(base_color, base_color_variant_1, base_color_variant_2, base_color_variant_3,
-                                     base_color_variant_4, contrast_color, time_value)
-
-        elif output == 'html':
-            generate_html_output(base_color, base_color_variant_1, base_color_variant_2, base_color_variant_3,
-                                 base_color_variant_4, contrast_color, time_value)
-
-        # publish on MQTT broker:
-
-        def packedColor(color):
-            FLOAT_ERROR = 0.0000005
-
-            def colorToInt(c):
-                return int(c*255 + 0.5 - FLOAT_ERROR)
-
-            return struct.pack("BBB", colorToInt(color.get_red()), colorToInt(color.get_green()), colorToInt(color.get_blue()))
-
-        data  = "Binary:" + struct.pack("B", 0)
-        data += packedColor(base_color)
-        data += packedColor(base_color_variant_1)
-        data += packedColor(base_color_variant_2)
-        data += packedColor(base_color_variant_3)
-        data += packedColor(base_color_variant_4)
-        data += packedColor(contrast_color)
-
-        payload = bytearray(data)
-        mc.publish(topic, payload)
-
-        program_cycles += + 1
         time.sleep(1)
 
 
-if __name__ == "__main__":
-    generate_palette()
