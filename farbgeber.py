@@ -3,28 +3,10 @@
 
 import time
 import struct
-import paho.mqtt.client as mqtt
 from time import gmtime, strftime
 from colour import Color
-
-MQTT_BROKER_ADDRESS = 'iot.eclipse.org'
-MQTT_PORT = 1883
-MQTT_CLIENT_ID = 'farbgeber'
-MQTT_TOPIC = 'c-base/farbgeber'
-
-def on_connect(client, userdata, rc):
-    print("Connected with result code " + str(rc))
-    client.subscribe("c-base/#")
-
-def on_message(client, userdata, msg):
-    print(msg.topic + " " + str(msg.payload))
-
-def create_mqtt_publisher(broker_address, port, client_id):
-    mc = mqtt.Client(client_id)
-    mc.on_connect = on_connect
-    mc.on_message = on_message
-    mc.connect(broker_address, port)
-    return mc
+import msgflo
+import gevent
 
 def generate_terminal_output(palette):
     print palette['time_value']
@@ -100,38 +82,51 @@ def generate_palette(base_saturation=1.0, base_luminance=0.4, hue_modifier=0.03,
 
     return p
 
-def publish_mqtt(mc, palette):
-    def packedColor(color):
-        FLOAT_ERROR = 0.0000005
+class Farbgeber(msgflo.Participant):
+    def __init__(self, role):
+        d = {
+            'component': 'c-base/farbgeber',
+            'label': 'Produce pleasing color palettes',
+            'icon': 'tint',
+            'inports': [
+                { 'id': 'in', 'type': 'bang' },
+            ],
+            'outports': [
+                { 'id': 'palette', 'type': 'buffer' },
+            ],
+        }
+        msgflo.Participant.__init__(self, d, role)
 
-        def colorToInt(c):
-            return int(c*255 + 0.5 - FLOAT_ERROR)
+    def process(self, inport, msg):
+        self.ack(msg)
+        gevent.Greenlet.spawn(self.loop)
 
-        return struct.pack("BBB", colorToInt(color.get_red()), colorToInt(color.get_green()), colorToInt(color.get_blue()))
+    def loop (self):
+        while True:
+            palette = generate_palette()
+            self.send_palette(palette)
+            gevent.sleep(1)
 
-    data  = "Binary:" + struct.pack("B", 0)
-    data += packedColor(palette['base_color'])
-    data += packedColor(palette['base_color_variant_1'])
-    data += packedColor(palette['base_color_variant_2'])
-    data += packedColor(palette['base_color_variant_3'])
-    data += packedColor(palette['base_color_variant_4'])
-    data += packedColor(palette['contrast_color'])
+    def send_palette(self, palette):
+        def packedColor(color):
+            FLOAT_ERROR = 0.0000005
 
-    payload = bytearray(data)
-    mc.publish(MQTT_TOPIC, payload)
+            def colorToInt(c):
+                return int(c*255 + 0.5 - FLOAT_ERROR)
+
+            return struct.pack("BBB", colorToInt(color.get_red()), colorToInt(color.get_green()), colorToInt(color.get_blue()))
+
+        data  = "Binary:" + struct.pack("B", 0)
+        data += packedColor(palette['base_color'])
+        data += packedColor(palette['base_color_variant_1'])
+        data += packedColor(palette['base_color_variant_2'])
+        data += packedColor(palette['base_color_variant_3'])
+        data += packedColor(palette['base_color_variant_4'])
+        data += packedColor(palette['contrast_color'])
+
+        payload = bytearray(data)
+        self.send('palette', palette)
 
 if __name__ == "__main__":
     print "Zentrale Farbgebeeinheit"
-    
-    mc = create_mqtt_publisher(MQTT_BROKER_ADDRESS, MQTT_PORT, MQTT_CLIENT_ID)
-    print "connecting to mqtt broker: %s:%d @ topic %s" % (MQTT_BROKER_ADDRESS, MQTT_PORT, MQTT_TOPIC)
-
-    while True:
-        palette = generate_palette()
-        generate_terminal_output(palette)
-        generate_html_output(palette)
-        publish_mqtt(mc, palette)
-
-        time.sleep(1)
-
-
+    msgflo.main(Farbgeber)
