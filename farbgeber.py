@@ -117,12 +117,12 @@ class Farbgeber(msgflo.Participant):
             return [colorToInt(color.get_red()), colorToInt(color.get_green()), colorToInt(color.get_blue())]
 
         data = dict()
-        data['base_color'] = packedColor(palette['base_color'])
-        data['base_color_variant_1'] = packedColor(palette['base_color_variant_1'])
-        data['base_color_variant_2'] = packedColor(palette['base_color_variant_2'])
-        data['base_color_variant_3'] = packedColor(palette['base_color_variant_3'])
-        data['base_color_variant_4'] = packedColor(palette['base_color_variant_4'])
-        data['contrast_color'] = packedColor(palette['contrast_color'])
+        data['b'] = packedColor(palette['base_color'])
+        data['v1'] = packedColor(palette['base_color_variant_1'])
+        data['v2'] = packedColor(palette['base_color_variant_2'])
+        data['v3'] = packedColor(palette['base_color_variant_3'])
+        data['v4'] = packedColor(palette['base_color_variant_4'])
+        data['c'] = packedColor(palette['contrast_color'])
 
         self.send('palette', data)
 
