@@ -115,3 +115,4 @@ crashlytics.properties
 crashlytics-build.properties
 
 output1.html
+esp8266/mqtt_client/config.h
