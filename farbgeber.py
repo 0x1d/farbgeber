@@ -92,7 +92,7 @@ class Farbgeber(msgflo.Participant):
                 { 'id': 'in', 'type': 'bang' },
             ],
             'outports': [
-                { 'id': 'palette', 'type': 'buffer' },
+                { 'id': 'palette', 'type': 'object' },
             ],
         }
         msgflo.Participant.__init__(self, d, role)
