@@ -1,12 +1,16 @@
 #!/usr/bin/python
 # coding=utf-8
 
-import time
-import struct
 from time import gmtime, strftime
 from colour import Color
 import msgflo
 import gevent
+
+def gen_time_value():
+    time_value = int(strftime("%M", gmtime())) * 60 + int(strftime("%S", gmtime()))
+    time_value = float(time_value)
+
+    return time_value
 
 def generate_terminal_output(palette):
     print palette['time_value']
@@ -51,10 +55,7 @@ def generate_html_output(palette):
     f.write(outputtxt)
     f.close()
 
-def generate_palette(base_saturation=1.0, base_luminance=0.4, hue_modifier=0.03, lum_modifier=0.07, sat_modifier=0.2): 
-    time_value = int(strftime("%M", gmtime())) * 60 + int(strftime("%S", gmtime()))
-    time_value = float(time_value)
-
+def generate_palette(time_value=0.0, base_saturation=1.0, base_luminance=0.4, hue_modifier=0.03, lum_modifier=0.07, sat_modifier=0.2): 
     base_hue = time_value / 3600
     base_color = Color(hsl=(base_hue, base_saturation, base_luminance))        
     base_color_variant_1 = Color(hsl=(base_color.hue + hue_modifier, base_saturation - sat_modifier, base_luminance))
@@ -103,7 +104,7 @@ class Farbgeber(msgflo.Participant):
 
     def loop (self):
         while True:
-            palette = generate_palette()
+            palette = generate_palette(time_value = gen_time_value())
             self.send_palette(palette)
             gevent.sleep(1)
 
@@ -117,12 +118,12 @@ class Farbgeber(msgflo.Participant):
             return [colorToInt(color.get_red()), colorToInt(color.get_green()), colorToInt(color.get_blue())]
 
         data = dict()
-        data['b'] = packedColor(palette['base_color'])
+        data['b']  = packedColor(palette['base_color'])
         data['v1'] = packedColor(palette['base_color_variant_1'])
         data['v2'] = packedColor(palette['base_color_variant_2'])
         data['v3'] = packedColor(palette['base_color_variant_3'])
         data['v4'] = packedColor(palette['base_color_variant_4'])
-        data['c'] = packedColor(palette['contrast_color'])
+        data['c']  = packedColor(palette['contrast_color'])
 
         self.send('palette', data)
 
