@@ -6,7 +6,6 @@ import struct
 from time import gmtime, strftime
 from colour import Color
 import msgflo
-import gevent
 
 def generate_terminal_output(palette):
     print palette['time_value']
@@ -51,11 +50,7 @@ def generate_html_output(palette):
     f.write(outputtxt)
     f.close()
 
-def generate_palette(base_saturation=1.0, base_luminance=0.4, hue_modifier=0.03, lum_modifier=0.07, sat_modifier=0.2): 
-    time_value = int(strftime("%M", gmtime())) * 60 + int(strftime("%S", gmtime()))
-    time_value = float(time_value)
-
-    base_hue = time_value / 3600
+def generate_palette(base_hue, base_saturation=1.0, base_luminance=0.4, hue_modifier=0.03, lum_modifier=0.07, sat_modifier=0.2): 
     base_color = Color(hsl=(base_hue, base_saturation, base_luminance))        
     base_color_variant_1 = Color(hsl=(base_color.hue + hue_modifier, base_saturation - sat_modifier, base_luminance))
     base_color_variant_2 = Color(hsl=(base_color.hue - hue_modifier, base_saturation - sat_modifier, base_luminance))
@@ -89,7 +84,7 @@ class Farbgeber(msgflo.Participant):
             'label': 'Produce pleasing color palettes',
             'icon': 'tint',
             'inports': [
-                { 'id': 'in', 'type': 'bang' },
+                { 'id': 'in', 'type': 'int' },
             ],
             'outports': [
                 { 'id': 'palette', 'type': 'object' },
@@ -98,14 +93,9 @@ class Farbgeber(msgflo.Participant):
         msgflo.Participant.__init__(self, d, role)
 
     def process(self, inport, msg):
+        palette = generate_palette(msg.data)
         self.ack(msg)
-        gevent.Greenlet.spawn(self.loop)
-
-    def loop (self):
-        while True:
-            palette = generate_palette()
-            self.send_palette(palette)
-            gevent.sleep(1)
+        self.send_palette(palette)
 
     def send_palette(self, palette):
         def packedColor(color):
