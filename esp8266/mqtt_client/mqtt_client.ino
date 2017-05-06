@@ -8,7 +8,7 @@
   - publishes "hello world" to the topic "outTopic" every two seconds
   - subscribes to the topic "inTopic", printing out any messages
     it receives. NB - it assumes the received payloads are strings not binary
-  - If the first character of the topic "inTopic" is an 1, switch ON the ESP Led,
+  - If the first character of the topic "inTopic" is an 1, switch ON the ESP Led,<fC
     else switch it off
 
  It will reconnect to the server if the connection is lost using a blocking
@@ -26,9 +26,10 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <Adafruit_NeoPixel.h>
+#include <ArduinoJson.h>
 
 #define PIN D8
-#define NUM_LEDS 6 // 150
+#define NUM_LEDS 60 // 150
 #define NUM_GROUPS 6 // base + variant1,2,3,4 + contrast
 #define LEDS_PER_GROUP NUM_LEDS / NUM_GROUPS
 
@@ -36,11 +37,12 @@
 
 const char* ssid = "<enter ssid here>";
 const char* password = "<enter password here>";
-const char* mqtt_server = "iot.eclipse.org";
+const char* mqtt_server = "c-beam.cbrp3.c-base.org";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, PIN, NEO_GRB + NEO_KHZ800);
+
 long lastMsg = 0;
 char msg[50];
 int value = 0;
@@ -49,7 +51,7 @@ typedef struct Color {
   unsigned char red;
   unsigned char green;
   unsigned char blue;
-} ;
+};
 
 typedef struct ColorElements {
   char pBinary[8];
@@ -60,7 +62,7 @@ typedef struct ColorElements {
 
 void setLedGroupColor(int group, Color color) {
   int startLed = group * LEDS_PER_GROUP;
-  int brightnessDivider = 32;
+  int brightnessDivider = 1; // 32
 
   color.red   /= brightnessDivider;
   color.green /= brightnessDivider;
@@ -71,6 +73,16 @@ void setLedGroupColor(int group, Color color) {
 
   strip.show();
   delayMicroseconds(100); // avoid glichtes (do not set below 100us)
+}
+
+Color extractColorFromJson(const JsonObject& json, const char* pKey) {
+  Color c;
+
+  c.red   = json[pKey][0];
+  c.green = json[pKey][1];
+  c.blue  = json[pKey][2];
+
+  return c;
 }
 
 void setup() {
@@ -114,28 +126,40 @@ void printColor(const char* pDescription, struct Color color) {
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
-  if (length != sizeof(ColorElements)) {
-    Serial.println("Invalid packet format!");
-       
+  Serial.println(topic);
+  StaticJsonBuffer<2048> jsonBuffer;
+  JsonObject& root = jsonBuffer.parseObject(payload);
+
+  if (!root.success()) {
+    Serial.println("parseObject() failed");
     return;
   }
 
-  Serial.println(topic);
+  Color base;
+  Color variant[5];
+  Color contrast;
 
-  const ColorElements* pColors = (ColorElements*)payload;
-  printColor("Base     ", pColors->base);
-  printColor("Variant 1", pColors->variant[0]);
-  printColor("Variant 2", pColors->variant[1]);
-  printColor("Variant 3", pColors->variant[2]);
-  printColor("Variant 4", pColors->variant[3]);
-  printColor("Contrast ", pColors->contrast);
+  base       = extractColorFromJson(root, "b");
+  variant[0] = extractColorFromJson(root, "v1");
+  variant[1] = extractColorFromJson(root, "v2");
+  variant[2] = extractColorFromJson(root, "v3");
+  variant[3] = extractColorFromJson(root, "v4");
+  variant[4] = extractColorFromJson(root, "v5");
+  contrast   = extractColorFromJson(root, "c");
+  
+  printColor("Base     ", base);
+  printColor("Variant 1", variant[0]);
+  printColor("Variant 2", variant[1]);
+  printColor("Variant 3", variant[2]);
+  printColor("Variant 4", variant[3]);
+  printColor("Contrast ", contrast);
 
-  setLedGroupColor(0, pColors->base);
-  setLedGroupColor(1, pColors->variant[0]);
-  setLedGroupColor(2, pColors->variant[1]);
-  setLedGroupColor(3, pColors->variant[2]);
-  setLedGroupColor(4, pColors->variant[3]);
-  setLedGroupColor(5, pColors->contrast);
+  setLedGroupColor(0, base);
+  setLedGroupColor(1, variant[0]);
+  setLedGroupColor(2, variant[1]);
+  setLedGroupColor(3, variant[2]);
+  setLedGroupColor(4, variant[3]);
+  setLedGroupColor(5, contrast);
 }
 
 void reconnect() {  
@@ -144,7 +168,7 @@ void reconnect() {
     
     if (client.connect("farbgeber_client")) {
       Serial.println("connected");      
-      client.subscribe("c-base/farbgeber");
+      client.subscribe("panel/weltenbaulab");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -155,7 +179,6 @@ void reconnect() {
 }
 
 void loop() {
-
   if (!client.connected()) {
     reconnect();
   }
