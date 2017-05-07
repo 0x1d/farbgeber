@@ -1,2 +1,2 @@
 colour==0.0.5
-msgflo==0.0.17
+msgflo==0.0.18
