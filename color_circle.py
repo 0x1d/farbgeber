@@ -18,7 +18,6 @@ def RGB_to_hex(RGB):
     return "#"+"".join(["0{0:x}".format(v) if v < 16 else
            "{0:x}".format(v) for v in RGB])
 
-
 def color_dict(gradient):
     ''' Takes in a list of RGB sub-lists and returns dictionary of
     colors in RGB and hex form for use in a graphing function
@@ -34,8 +33,7 @@ def linear_gradient(start_hex, finish_hex="#FFFFFF", n=10):
     two hex colors. start_hex and finish_hex
     should be the full six-digit color string,
     inlcuding the number sign ("#FFFFFF") '''
-  
-  
+    
     # Starting and ending colors in RGB form
     s = hex_to_RGB(start_hex)
     f = hex_to_RGB(finish_hex)
@@ -56,7 +54,7 @@ def linear_gradient(start_hex, finish_hex="#FFFFFF", n=10):
 
 
 #cl = [Color("red"), Color("yellow"), Color("lime"), Color("cyan"), Color("blue"), Color("magenta")]
-cl = [Color("red"), Color("lime"), Color("cyan"), Color("blue"), Color("magenta")] # skip yellow
+cl = [Color("red"), Color("yellow"), Color("lime"), Color("cyan"), Color("blue"), Color("magenta")]
 hl = [c.hex_l for c in cl]
 
 steps = 3600 / len(hl)
@@ -67,6 +65,9 @@ for i in range(len(hl)):
 
 def generate_cust_palette(time_value):    
     base_color = colors[int(time_value)]
+
+    # TODO: add variant colors here
+
 
     p = dict()
     p['time_value']           = base_color
@@ -96,13 +97,17 @@ if __name__ == "__main__":
     canvas = Canvas(master, width=canvas_width, height=canvas_height)
     canvas.pack()
 
+    def ptvc(time_value2):
+        palette  = farbgeber.generate_palette(time_value = float(time_value2))
+        print("%d: %s" % (time_value2, palette['base_color'].hex_l))
+
     time_value = 0.0
-    color_offset = 0.0
-    while(time_value + color_offset < 3600):
+    while(time_value < 3600):
         index = time_value / 6
-        palette  = farbgeber.generate_palette(time_value = time_value + color_offset)
+        palette  = farbgeber.generate_palette(time_value = time_value)
         palette2 = generate_cust_palette(time_value)
 
+        ptvc(time_value)
         draw_line(0, index, palette['base_color'], canvas, canvas_width, canvas_height)
         draw_line(2, index, palette2['base_color'], canvas, canvas_width, canvas_height)
         time_value += 6
