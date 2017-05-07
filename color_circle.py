@@ -56,16 +56,14 @@ def linear_gradient(start_hex, finish_hex="#FFFFFF", n=10):
 
 
 #cl = [Color("red"), Color("yellow"), Color("lime"), Color("cyan"), Color("blue"), Color("magenta")]
-cl = [Color("red"), Color("yellow"), Color("blue"), Color("blue"), Color("blue"), Color("magenta")]
+cl = [Color("red"), Color("lime"), Color("cyan"), Color("blue"), Color("magenta")] # skip yellow
 hl = [c.hex_l for c in cl]
 
+steps = 3600 / len(hl)
 colors = list()
-colors.extend(linear_gradient(hl[0], hl[1], 600))
-colors.extend(linear_gradient(hl[1], hl[2], 600))
-colors.extend(linear_gradient(hl[2], hl[3], 600))
-colors.extend(linear_gradient(hl[3], hl[4], 600))
-colors.extend(linear_gradient(hl[4], hl[5], 600))
-colors.extend(linear_gradient(hl[5], hl[0], 600))
+
+for i in range(len(hl)):
+    colors.extend(linear_gradient(hl[i], hl[i + 1 if i < len(hl) - 1 else 0], steps))
 
 def generate_cust_palette(time_value):    
     base_color = colors[int(time_value)]
