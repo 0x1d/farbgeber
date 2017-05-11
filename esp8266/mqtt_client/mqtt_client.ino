@@ -8,6 +8,10 @@
  a client for the farbgeber.
 
  - Modify config.h first but do not check it in into github!
+
+ - You also have to increase the size of MQTT_MAX_PACKET_SIZE in PubSubClient.h
+   from 128 to 512 to get MQTT working properly. This is an issue in the library
+   which has not been fixed yet.
 */
 
 #include <ESP8266WiFi.h>
@@ -29,7 +33,6 @@ extern const char* mqtt_topic;
 WiFiClient espClient;
 PubSubClient client(espClient);
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, DATA_PIN, NEO_GRB + NEO_KHZ800);
-
 
 typedef struct Color {
   unsigned char red;
@@ -62,34 +65,44 @@ Color extractColorFromJson(const JsonObject& json, const char* pKey) {
   return c;
 }
 
+void sendDiscoveryMsg() {
+  StaticJsonBuffer<1024> rootBuffer;
+  JsonObject& root = rootBuffer.createObject();
+  root["protocol"] = "discovery";
+  root["command"]  = "participant";
+
+  JsonObject& payload = root.createNestedObject("payload");
+  payload["component"] = "c-base/panel";
+  payload["label"]     = "Color LED panel";
+  payload["icon"]      = "lightbulb-o";
+
+  JsonArray& inports = payload.createNestedArray("inports");
+  JsonObject& inport = inports.createNestedObject();
+  inport["queue"]       = "panel/bubbler";
+  inport["type"]        = "object";
+  inport["description"] = "Farbgeber-style palette to display";
+  inport["id"]          = "palette";
+
+  JsonArray& outports = payload.createNestedArray("outports");
+  payload["role"] = "weltenbaulab_panel";
+  payload["id"]   = "weltenbaulab_panel";
+
+  char pMqtt[512];
+  root.printTo(pMqtt); 
+  client.publish("fbp", pMqtt, root.measureLength());  
+  root.printTo(Serial);
+}
+
 void setup() {
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
     
   pinMode(BUILTIN_LED, OUTPUT);
   Serial.begin(115200);
+ 
   setup_wifi();
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
-
-  long lastMsg = 0;
-  char msg[50];
-  int value = 0;
-
-  while(true) {
-    if (!client.connected())
-      reconnect();
-  
-    client.loop();
-
-    long now = millis();
-    if (now - lastMsg > 2000) {
-      lastMsg = now;
-      ++value;
-      snprintf (msg, 75, "Heartbeat #%ld", value);
-      Serial.println(msg);
-    }
-  }
 }
 
 void setup_wifi() {
@@ -174,5 +187,23 @@ void reconnect() {
 }
 
 void loop() {
-  // DO NOT USE
+  static long lastMsg = 0;
+  static char msg[50];
+  static int value = 0;  
+  
+  if (!client.connected())
+      reconnect();
+  
+    client.loop();
+  
+    long now = millis();
+    if (now - lastMsg > 10000) {
+      lastMsg = now;
+      ++value;
+      sendDiscoveryMsg();
+    }
 }
+
+
+
+
