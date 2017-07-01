@@ -10,6 +10,9 @@ const char* wifi_password = <put wifi password here>
 const char* mqtt_server = <put mqtt server address here>
 const char* mqtt_topic = <put farbgeber mqtt topic to subscribe to>
 
+// MsgFlo
+const char* msgflo_role = <put MsgFlo role here>
+
 // LED stripe:
 #define DATA_PIN 4 // Data pin where LED stripe is connected on Node MCU
 #define NUM_LEDS 60 // Number of LEDs on the stripe

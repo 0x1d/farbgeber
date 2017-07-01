@@ -28,6 +28,7 @@ extern const char* wifi_ssid;
 extern const char* wifi_password;
 extern const char* mqtt_server;
 extern const char* mqtt_topic;
+extern const char* msgflo_role;
 // ---------------------------------------------
 
 WiFiClient espClient;
@@ -84,8 +85,8 @@ void sendDiscoveryMsg() {
   inport["id"]          = "palette";
 
   JsonArray& outports = payload.createNestedArray("outports");
-  payload["role"] = "weltenbaulab_panel";
-  payload["id"]   = "weltenbaulab_panel";
+  payload["role"] = msgflo_role;
+  payload["id"]   = msgflo_role;
 
   char pMqtt[512];
   root.printTo(pMqtt); 
