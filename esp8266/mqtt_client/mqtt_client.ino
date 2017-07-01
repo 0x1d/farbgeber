@@ -78,7 +78,7 @@ void sendDiscoveryMsg() {
 
   JsonArray& inports = payload.createNestedArray("inports");
   JsonObject& inport = inports.createNestedObject();
-  inport["queue"]       = "panel/bubbler";
+  inport["queue"]       = mqtt_topic;
   inport["type"]        = "object";
   inport["description"] = "Farbgeber-style palette to display";
   inport["id"]          = "palette";
