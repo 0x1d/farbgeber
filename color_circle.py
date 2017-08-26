@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import threading
+import time
 
 import pygame
 from colour import Color
@@ -16,9 +17,6 @@ class FarbgeberNew:
 
         for i, c in enumerate(hex_list):
             self.colors.extend(self.linear_gradient(hex_list[i], hex_list[i + 1 if i < len(hex_list) - 1 else 0], steps))
- 
-        print self.colors
-
     
     def linear_gradient(self, start_hex, finish_hex="#FFFFFF", n=10):
         """ 
@@ -105,7 +103,7 @@ def draw_circle(screen, no, index, base_color, canvas=0, width=0, height=0):
     canvas.update()
 
 if __name__ == "__main__":
-    pygame.init()
+    # pygame.init()
 
     canvas_width = 800
     canvas_height = 600
@@ -121,6 +119,13 @@ if __name__ == "__main__":
         draw_line(screen, 0, index, palette['base_color'], canvas_width, canvas_height)
         time_value += 6
  
-while True:
-    pass
+    running = True
 
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        time.sleep(0.1)
+
+print "done"
