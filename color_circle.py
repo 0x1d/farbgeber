@@ -11,12 +11,12 @@ from colour import Color
 class FarbgeberNew:
     def __init__(self, *colors):
         hex_list = [c.hex_l for c in colors]
-        steps = 3600 / len(hex_list)
+        steps = int(3600 / len(hex_list))
         self.colors = list()
 
         for i, c in enumerate(hex_list):
             self.colors.extend(self.linear_gradient(hex_list[i], hex_list[i + 1 if i < len(hex_list) - 1 else 0], steps))
-    
+
     def linear_gradient(self, start_hex, finish_hex="#FFFFFF", n=10):
         """ 
         returns a gradient list of (n) colors between
@@ -47,7 +47,7 @@ class FarbgeberNew:
             colors in RGB and hex form for use in a graphing function
             defined later on 
             """
-        
+
             return {"hex":[rgb_to_hex(rgb) for rgb in gradient],
                     "r":[rgb[0] for rgb in gradient],
                     "g":[rgb[1] for rgb in gradient],
@@ -65,8 +65,8 @@ class FarbgeberNew:
             rgb_list.append(curr_vector)
 
         return [Color(x) for x in color_dict(rgb_list)['hex']]
-    
-    def gen_palette(self, time_value):    
+
+    def gen_palette(self, time_value):
         base_color = self.colors[int(time_value)]
 
         # TODO: add variant colors here
@@ -87,7 +87,7 @@ def draw_line(screen, no, index, color, width=0, height=0):
     w = (no + 1) * width / ((no + 1) * 12.0)
     x = (no + 1) * width / 2 - w / 2
     y = int(index)
-     
+
     pygame.draw.line(screen, (255 * color.red, 255 * color.green, 255 * color.blue), (x, y), (x + w, y), 5)
     pygame.display.update()
 
@@ -105,7 +105,7 @@ if __name__ == "__main__":
     canvas_width = 800
     canvas_height = 600
     screen = pygame.display.set_mode((canvas_width, canvas_height))
-    
+
     fb = FarbgeberNew(Color("red"), Color("yellow"), Color("lime"), Color("cyan"), Color("blue"), Color("magenta"))
     time_value = 0.0
 
