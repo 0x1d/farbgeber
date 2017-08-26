@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import threading
-import time
 
 import pygame
 from colour import Color
@@ -103,8 +102,6 @@ def draw_circle(screen, no, index, base_color, canvas=0, width=0, height=0):
     canvas.update()
 
 if __name__ == "__main__":
-    # pygame.init()
-
     canvas_width = 800
     canvas_height = 600
     screen = pygame.display.set_mode((canvas_width, canvas_height))
@@ -118,7 +115,8 @@ if __name__ == "__main__":
 
         draw_line(screen, 0, index, palette['base_color'], canvas_width, canvas_height)
         time_value += 6
- 
+
+    clock = pygame.time.Clock()
     running = True
 
     while running:
@@ -126,6 +124,5 @@ if __name__ == "__main__":
             if event.type == pygame.QUIT:
                 running = False
 
-        time.sleep(0.1)
+        clock.tick(60)
 
-print "done"
