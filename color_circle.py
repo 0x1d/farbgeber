@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import threading
+import math
 
 import pygame
 from colour import Color
@@ -91,15 +92,25 @@ def draw_line(screen, no, index, color, width=0, height=0):
     pygame.draw.line(screen, (255 * color.red, 255 * color.green, 255 * color.blue), (x, y), (x + w, y), 5)
     pygame.display.update()
 
-def draw_circle(screen, no, index, base_color, canvas=0, width=0, height=0):
-    ww = width + 1 # 12.0
+def draw_circle(screen, no, index, color, canvas=0, width=0, height=0):
+    def set_pixel(color, x, y):
+        pygame.draw.line(screen, (255 * color.red, 255 * color.green, 255 * color.blue), (x, y), (x, y), 1)
+        pygame.display.update()
 
-    w = (no + 1) * width / ((no + 1) * ww)
-    x = (no + 1) * width / 2 - w / 2
-    y = int(index)
+    i = 2 * math.pi * index / 3600.0
 
-    canvas.create_line(x, y, x + w, y, fill=base_color.hex)
-    canvas.update()
+    r1 = 200
+    r2 = 150
+    x1 = 400 + r1 * math.cos(i)
+    x2 = 400 + r2 * math.cos(i)
+    y1 = 300 + r1 * math.sin(i)
+    y2 = 300 + r2 * math.sin(i)
+
+    pygame.draw.line(screen, (255 * color.red, 255 * color.green, 255 *
+        color.blue), (x1, y1), (x2, y2), 1)
+    pygame.display.update()
+
+    # set_pixel(color, x, y)
 
 if __name__ == "__main__":
     canvas_width = 800
@@ -110,11 +121,11 @@ if __name__ == "__main__":
     time_value = 0.0
 
     while(time_value < 3600):
-        index = time_value / 6
+        index = time_value
         palette = fb.gen_palette(time_value)
 
-        draw_line(screen, 0, index, palette['base_color'], canvas_width, canvas_height)
-        time_value += 6
+        draw_circle(screen, 0, index, palette['base_color'], canvas_width, canvas_height)
+        time_value += 5
 
     clock = pygame.time.Clock()
     running = True
