@@ -4,9 +4,8 @@ import threading
 import math
 
 import pygame
-from colour import Color
 
-# import farbgeber
+from colour import Color
 
 
 class FarbgeberNew:
@@ -17,6 +16,7 @@ class FarbgeberNew:
 
         for i, c in enumerate(hex_list):
             self.colors.extend(self.linear_gradient(hex_list[i], hex_list[i + 1 if i < len(hex_list) - 1 else 0], steps))
+
 
     def linear_gradient(self, start_hex, finish_hex="#FFFFFF", n=10):
         """ 
@@ -33,6 +33,7 @@ class FarbgeberNew:
             # Pass 16 to the integer function for change of base
             return [int(hex_value[i:i + 2], 16) for i in range(1, 6, 2)]
 
+
         def rgb_to_hex(rgb):
             """ 
             [255,255,255] -> "#FFFFFF" 
@@ -41,6 +42,7 @@ class FarbgeberNew:
             rgb = [int(x) for x in rgb]
             return "#"+"".join(["0{0:x}".format(v) if v < 16 else
                 "{0:x}".format(v) for v in rgb])
+
 
         def color_dict(gradient):
             """ 
@@ -67,6 +69,7 @@ class FarbgeberNew:
 
         return [Color(x) for x in color_dict(rgb_list)['hex']]
 
+
     def gen_palette(self, time_value):
         base_color = self.colors[int(time_value)]
 
@@ -84,20 +87,11 @@ class FarbgeberNew:
 
         return p
 
-def draw_line(screen, no, index, color, width=0, height=0):
-    w = (no + 1) * width / ((no + 1) * 12.0)
-    x = (no + 1) * width / 2 - w / 2
-    y = int(index)
 
-    pygame.draw.line(screen, (255 * color.red, 255 * color.green, 255 * color.blue), (x, y), (x + w, y), 5)
-    pygame.display.update()
+def draw_circle(screen, time_value, canvas=0, width=0, height=0):
+    color = fb.gen_palette(time_value)["base_color"]
 
-def draw_circle(screen, no, index, color, canvas=0, width=0, height=0):
-    def set_pixel(color, x, y):
-        pygame.draw.line(screen, (255 * color.red, 255 * color.green, 255 * color.blue), (x, y), (x, y), 1)
-        pygame.display.update()
-
-    i = 2 * math.pi * index / 3600.0
+    i = 2 * math.pi * time_value / 3600.0
 
     r1 = 200
     r2 = 150
@@ -110,7 +104,41 @@ def draw_circle(screen, no, index, color, canvas=0, width=0, height=0):
         color.blue), (x1, y1), (x2, y2), 1)
     pygame.display.update()
 
-    # set_pixel(color, x, y)
+def setPixel(screen, x, y, color):
+    pygame.draw.line(screen, \
+      (255 * color.red, 255 * color.green, 255 * color.blue), (x, y), (x, y), 1)
+    pygame.display.update()
+
+def circleSym8(screen, xCenter, yCenter, radius, color):
+    r2 = radius * radius
+    setPixel(screen, xCenter, yCenter + radius, color)
+    setPixel(screen, xCenter, yCenter - radius, color)
+    setPixel(screen, xCenter + radius, yCenter, color)
+    setPixel(screen, xCenter - radius, yCenter, color)
+
+    y = radius
+    x = 1
+    y = int(math.sqrt(r2 - 1) + 0.5)
+
+    dbgColor = Color("lime")
+
+    while (x < y):
+        setPixel(screen, xCenter + x, yCenter + y, color)
+        setPixel(screen, xCenter + x, yCenter - y, color)
+        setPixel(screen, xCenter - x, yCenter + y, color)
+        setPixel(screen, xCenter - x, yCenter - y, color)
+        setPixel(screen, xCenter + y, yCenter + x, color)
+        setPixel(screen, xCenter + y, yCenter - x, color)
+        setPixel(screen, xCenter - y, yCenter + x, color)
+        setPixel(screen, xCenter - y, yCenter - x, color)
+        x += 1
+        y = int(math.sqrt(r2 - x*x) + 0.5)
+
+    if (x == y):
+        setPixel(screen, xCenter + x, yCenter + y, color)
+        setPixel(screen, xCenter + x, yCenter - y, color)
+        setPixel(screen, xCenter - x, yCenter + y, color)
+        setPixel(screen, xCenter - x, yCenter - y, color)
 
 if __name__ == "__main__":
     canvas_width = 800
@@ -121,11 +149,11 @@ if __name__ == "__main__":
     time_value = 0.0
 
     while(time_value < 3600):
-        index = time_value
-        palette = fb.gen_palette(time_value)
+      # draw_circle(screen, time_value, canvas_width, canvas_height)
+      time_value += 1
 
-        draw_circle(screen, 0, index, palette['base_color'], canvas_width, canvas_height)
-        time_value += 5
+    circleSym8(screen, 400, 300, 200, Color("red"))
+    circleSym8(screen, 400, 300, 150, Color("red"))
 
     clock = pygame.time.Clock()
     running = True
