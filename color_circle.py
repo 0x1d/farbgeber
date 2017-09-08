@@ -110,17 +110,32 @@ def setPixel(screen, x, y, color):
     pygame.display.update()
 
 def circleSym8(screen, xCenter, yCenter, radius, color):
-    r2 = radius * radius
+    dbgColor = Color("lime")
+
+    radius_inner = radius * 0.80
+
+    r1_2 = radius * radius
+    r2_2 = radius_inner * radius_inner
+
+    # outer
     setPixel(screen, xCenter, yCenter + radius, color)
     setPixel(screen, xCenter, yCenter - radius, color)
     setPixel(screen, xCenter + radius, yCenter, color)
     setPixel(screen, xCenter - radius, yCenter, color)
 
-    y = radius
-    x = 1
-    y = int(math.sqrt(r2 - 1) + 0.5)
+    # inner
+    setPixel(screen, xCenter, yCenter + radius_inner, color)
+    setPixel(screen, xCenter, yCenter - radius_inner, color)
+    setPixel(screen, xCenter + radius_inner, yCenter, color)
+    setPixel(screen, xCenter - radius_inner, yCenter, color)
 
-    dbgColor = Color("lime")
+    y = radius
+    y_inner = radius_inner
+    x = 1
+    x_inner = 1
+    x_inner_increment = radius_inner / radius
+    y = int(math.sqrt(r1_2 - 1) + 0.5)
+    y_inner = int(math.sqrt(r2_2 - 1) + 0.5)
 
     while (x < y):
         setPixel(screen, xCenter + x, yCenter + y, color)
@@ -132,13 +147,29 @@ def circleSym8(screen, xCenter, yCenter, radius, color):
         setPixel(screen, xCenter - y, yCenter + x, color)
         setPixel(screen, xCenter - y, yCenter - x, color)
         x += 1
-        y = int(math.sqrt(r2 - x*x) + 0.5)
+        y = int(math.sqrt(r1_2 - x*x) + 0.5)
+
+        setPixel(screen, xCenter + x_inner, yCenter + y_inner, color)
+        setPixel(screen, xCenter + x_inner, yCenter - y_inner, color)
+        setPixel(screen, xCenter - x_inner, yCenter + y_inner, color)
+        setPixel(screen, xCenter - x_inner, yCenter - y_inner, color)
+        setPixel(screen, xCenter + y_inner, yCenter + x_inner, color)
+        setPixel(screen, xCenter + y_inner, yCenter - x_inner, color)
+        setPixel(screen, xCenter - y_inner, yCenter + x_inner, color)
+        setPixel(screen, xCenter - y_inner, yCenter - x_inner, color)
+        x_inner += x_inner_increment
+        y_inner = int(math.sqrt(r2_2 - x_inner * x_inner) + 0.5)
 
     if (x == y):
         setPixel(screen, xCenter + x, yCenter + y, color)
         setPixel(screen, xCenter + x, yCenter - y, color)
         setPixel(screen, xCenter - x, yCenter + y, color)
         setPixel(screen, xCenter - x, yCenter - y, color)
+
+        setPixel(screen, xCenter + x_inner, yCenter + y_inner, color)
+        setPixel(screen, xCenter + x_inner, yCenter - y_inner, color)
+        setPixel(screen, xCenter - x_inner, yCenter + y_inner, color)
+        setPixel(screen, xCenter - x_inner, yCenter - y_inner, color)
 
 if __name__ == "__main__":
     canvas_width = 800
@@ -152,8 +183,8 @@ if __name__ == "__main__":
       # draw_circle(screen, time_value, canvas_width, canvas_height)
       time_value += 1
 
-    circleSym8(screen, 400, 300, 200, Color("red"))
-    circleSym8(screen, 400, 300, 150, Color("red"))
+    circleSym8(screen, 400, 300, 250, Color("red"))
+    # circleSym8(screen, 400, 300, 150, Color("red"))
 
     clock = pygame.time.Clock()
     running = True
