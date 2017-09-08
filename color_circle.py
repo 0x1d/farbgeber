@@ -72,24 +72,44 @@ class FarbgeberNew:
 
     def gen_palette(self, time_value):
         base_color = self.colors[int(time_value)]
+        base_hue = base_color.get_hue()
 
-        # TODO: add variant colors here
+        base_degree = base_hue * 360                                                
+        if base_degree < 180:                                                       
+            contrast_hue = base_degree + 180                                        
+        else:                                                                       
+            contrast_hue = base_degree - 180
+
+        base_saturation = base_color.get_saturation()
+        base_luminance = base_color.get_luminance()
+
+        contrast_hue /= 360
+        contrast_color = Color(hsl=(contrast_hue, base_saturation, base_luminance))
+
+        hue_modifier = 0.03
+        lum_modifier = 0.07
+        sat_modifier = 0.2
+
+        base_color_variant_1 = Color(hsl=(base_color.hue + hue_modifier, base_saturation - sat_modifier, base_luminance))
+        base_color_variant_2 = Color(hsl=(base_color.hue - hue_modifier, base_saturation - sat_modifier, base_luminance))
+        base_color_variant_3 = Color(hsl=(base_color.hue, base_saturation, base_luminance + lum_modifier))
+        base_color_variant_4 = Color(hsl=(base_color.hue, base_saturation, base_luminance - lum_modifier))
 
         p = dict()
-        p['time_value']           = base_color
+        p['time_value']           = time_value
         p['base_color']           = base_color
-        p['base_color_variant_1'] = base_color
-        p['base_color_variant_2'] = base_color
-        p['base_color_variant_3'] = base_color
-        p['base_color_variant_4'] = base_color
-        p['base_color_variant_5'] = base_color
-        p['contrast_color']       = base_color
+        p['base_color_variant_1'] = base_color_variant_1
+        p['base_color_variant_2'] = base_color_variant_2
+        p['base_color_variant_3'] = base_color_variant_3
+        p['base_color_variant_4'] = base_color_variant_4
+        p['contrast_color']       = contrast_color
 
         return p
 
 
 def draw_circle(screen, time_value, canvas=0, width=0, height=0):
-    color = fb.gen_palette(time_value)["base_color"]
+    color_b = fb.gen_palette(time_value)["base_color"]
+    color_c = fb.gen_palette(time_value)["contrast_color"]
 
     i = 2 * math.pi * time_value / 3600.0
 
@@ -100,8 +120,17 @@ def draw_circle(screen, time_value, canvas=0, width=0, height=0):
     y1 = 300 + r1 * math.sin(i)
     y2 = 300 + r2 * math.sin(i)
 
-    pygame.draw.line(screen, (255 * color.red, 255 * color.green, 255 *
-        color.blue), (x1, y1), (x2, y2), 1)
+    x1_o = 400 + (r1 + 50) * math.cos(i)
+    x2_o = 400 + (r2 + 50) * math.cos(i)
+    y1_o = 300 + (r1 + 50) * math.sin(i)
+    y2_o = 300 + (r2 + 50) * math.sin(i)
+
+    pygame.draw.line(screen, (255 * color_b.red, 255 * color_b.green, 255 *
+                              color_b.blue), (x1, y1), (x2, y2), 1)
+
+    pygame.draw.line(screen, (255 * color_c.red, 255 * color_c.green, 255 *
+                              color_c.blue), (x1_o, y1_o), (x2_o, y2_o), 1)
+
     pygame.display.update()
 
 def setPixel(screen, x, y, color):
