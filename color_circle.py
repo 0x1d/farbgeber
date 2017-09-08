@@ -109,10 +109,15 @@ def setPixel(screen, x, y, color):
       (255 * color.red, 255 * color.green, 255 * color.blue), (x, y), (x, y), 1)
     pygame.display.update()
 
+def setLine(screen, x1, y1, x2, y2, color):
+    pygame.draw.line(screen, \
+                     (255 * color.red, 255 * color.green, 255 * color.blue), (x1, y1), (x2, y2), 1)
+    pygame.display.update()
+
 def circleSym8(screen, xCenter, yCenter, radius, color):
     dbgColor = Color("lime")
 
-    radius_inner = radius * 0.80
+    radius_inner = radius * 0.75
 
     r1_2 = radius * radius
     r2_2 = radius_inner * radius_inner
@@ -138,6 +143,10 @@ def circleSym8(screen, xCenter, yCenter, radius, color):
     y_inner = int(math.sqrt(r2_2 - 1) + 0.5)
 
     while (x < y):
+        x1 = xCenter + x
+        y1 = yCenter + y
+
+        # pixels
         setPixel(screen, xCenter + x, yCenter + y, color)
         setPixel(screen, xCenter + x, yCenter - y, color)
         setPixel(screen, xCenter - x, yCenter + y, color)
@@ -149,6 +158,12 @@ def circleSym8(screen, xCenter, yCenter, radius, color):
         x += 1
         y = int(math.sqrt(r1_2 - x*x) + 0.5)
 
+        x2 = xCenter + x
+        y2 = yCenter + y
+
+        x3 = xCenter + x_inner
+        y3 = yCenter + y_inner
+
         setPixel(screen, xCenter + x_inner, yCenter + y_inner, color)
         setPixel(screen, xCenter + x_inner, yCenter - y_inner, color)
         setPixel(screen, xCenter - x_inner, yCenter + y_inner, color)
@@ -159,6 +174,11 @@ def circleSym8(screen, xCenter, yCenter, radius, color):
         setPixel(screen, xCenter - y_inner, yCenter - x_inner, color)
         x_inner += x_inner_increment
         y_inner = int(math.sqrt(r2_2 - x_inner * x_inner) + 0.5)
+
+        x4 = xCenter + x_inner
+        y4 = yCenter + y_inner
+
+        pygame.draw.polygon(screen, (255, 0, 0), [[x1,y1], [x2,y2], [x3,y3], [x4,y4]], 0)
 
     if (x == y):
         setPixel(screen, xCenter + x, yCenter + y, color)
@@ -180,11 +200,10 @@ if __name__ == "__main__":
     time_value = 0.0
 
     while(time_value < 3600):
-      # draw_circle(screen, time_value, canvas_width, canvas_height)
+      draw_circle(screen, time_value, canvas_width, canvas_height)
       time_value += 1
 
-    circleSym8(screen, 400, 300, 250, Color("red"))
-    # circleSym8(screen, 400, 300, 150, Color("red"))
+    # circleSym8(screen, 400, 300, 200, Color("red"))
 
     clock = pygame.time.Clock()
     running = True
