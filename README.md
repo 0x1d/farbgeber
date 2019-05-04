@@ -41,7 +41,7 @@ docker-compose up -d --build
 ## Configuration
 | Environment Variable | Value | Description |
 | --- | --- | -- |
-| MQTT_PUBLISHER | 0 / 1 | 1: Run farbgeber as a MQTT publisher |
+| MQTT_PUBLISHER | 0 / 1 | 1: Run farbgeber as a MQTT publisher.  0: Just print to terminal |
 | MQTT_BROKER_HOST | iot.eclipse.org | Hostname of your MQTT broker |
 | MQTT_BROKER_PORT | 1883 | Port of your MQTT broker |
 | MQTT_TOPIC | wirelos/farbgeber | Topic where to publish the color scheme |

@@ -1,22 +1,17 @@
 import os
-import paho.mqtt.client as mqtt
 import struct 
-import json
 import output
+import publisher
 from time import gmtime, strftime, sleep
 from colour import Color
 
 MQTT_PUBLISHER = bool(int(os.environ['MQTT_PUBLISHER']))
-MQTT_BROKER_HOST = os.environ['MQTT_BROKER_HOST']
-MQTT_BROKER_PORT = os.environ['MQTT_BROKER_PORT']
-MQTT_TOPIC = os.environ['MQTT_TOPIC']
-MQTT_CLIENT_ID = os.environ['MQTT_CLIENT_ID']
 UPDATE_INTERVAL = os.environ['UPDATE_INTERVAL']
 SCHEME_FORMAT = os.environ['SCHEME_FORMAT']
 GENERATE_HTML = bool(int(os.environ['GENERATE_HTML']))
 HTML_OUTPUT_PATH = os.environ['HTML_OUTPUT_PATH']
 
-def gen_time_value():
+def generate_time_value():
     time_value = int(strftime("%M", gmtime())) * 60 + int(strftime("%S", gmtime()))
     time_value = float(time_value)
     return time_value
@@ -79,22 +74,8 @@ def pack_hex(palette):
     p['c'] = palette['contrast_color'].hex
     return p
 
-def on_connect(client, userdata, rc):
-    print("Connected with result code " + str(rc))
-
-def on_message(client, userdata, msg):
-    print(msg.payload)
-
-def mqtt_publisher():
-    client = mqtt.Client(client_id=MQTT_CLIENT_ID, clean_session=True, userdata=None, protocol=mqtt.MQTTv311, transport="tcp")
-    client.on_connect = on_connect
-    client.on_message = on_message
-    client.connect(MQTT_BROKER_HOST, int(MQTT_BROKER_PORT), 60)
-    client.loop_start()
-    return client
-
 def generate_scheme():
-    palette = generate_palette(time_value = gen_time_value())
+    palette = generate_palette(time_value = generate_time_value())
     if GENERATE_HTML:
         output.html(palette, HTML_OUTPUT_PATH)
     if SCHEME_FORMAT == "HEX":
@@ -102,26 +83,12 @@ def generate_scheme():
     else:
         return pack_rgb(palette)
 
-def mqtt_main():
-    client = mqtt_publisher()
-    while True:
-        scheme = generate_scheme()
-        client.publish(MQTT_TOPIC, json.dumps(scheme))
-        sleep(int(UPDATE_INTERVAL))
-
-def main ():
-
-    while True:
-        scheme = generate_scheme()
-        output.terminal(scheme)
-        sleep(int(UPDATE_INTERVAL))
-
 if __name__ == "__main__":
     print("Zentrale Farbgebeeinheit")
     if MQTT_PUBLISHER:
-        print("MQTT Broker: " + MQTT_BROKER_HOST)
-        print("MQTT ClientID: " + MQTT_CLIENT_ID)
-        print("MQTT Topic: " + MQTT_TOPIC)
-        mqtt_main()
+        publisher.mqtt_handler(generate_scheme)
     else:
-        main()
+        # not publishing, just print to terminal
+        while True:
+            output.terminal(generate_scheme())
+            sleep(int(UPDATE_INTERVAL))
