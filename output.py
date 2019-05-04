@@ -1,7 +1,6 @@
 from time import gmtime, strftime
 
 def terminal(p):
-    print(p['t'])
     print("base_color ", p['b'])
     print("baseColorVariant1 ", p['v1'])
     print("baseColorVariant2 ", p['v2'])
@@ -11,7 +10,7 @@ def terminal(p):
     print("###################################")
 
 def html(palette, outPath):
-    time_value = palette['time_value']
+    base_hue = palette['base_hue']
     base_color = palette['base_color']
     base_color_variant_1 = palette['base_color_variant_1']
     base_color_variant_2 = palette['base_color_variant_2']
@@ -29,7 +28,7 @@ def html(palette, outPath):
     <div class="base_color_variant_3">baseColorVariant3 """ + base_color_variant_3.hex + """</div>
     <div class="base_color_variant_4">baseColorVariant4 """ + base_color_variant_4.hex + """</div>
     <div class="Contrastcolor">Contrastcolor """ + contrast_color.hex + """</div>"""
-    zeitzeile = "<h3>Color-Seed " + str(time_value) + " " + strftime("%H:%M:%S", gmtime()) + "Uhr</h3>"
+    zeitzeile = "<h3>Color-Seed " + str(base_hue) + " " + strftime("%H:%M:%S", gmtime()) + "Uhr</h3>"
     htmlclosing = """</body></html>"""
     css1 = "body { font-size:20px; background-color:" + base_color.hex + "; color:" + contrast_color.hex + "; }"
     css2 = ".base_color_variant_1 { background-color:" + base_color_variant_1.hex + "; width:100%; height:40px; padding: 40px; font-size:20px; } \n\r"

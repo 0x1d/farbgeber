@@ -12,12 +12,17 @@ UPDATE_INTERVAL = os.environ['UPDATE_INTERVAL']
 # TODO subscribe to topic in order to calculate a colorscheme based on a custom value
 def mqtt_handler(generator):
     
+    GENERATOR_TOPIC = MQTT_TOPIC + "/generate"
+
     def on_connect(client, userdata, flags, rc):
         print("Connected with result code "+str(rc))
-        client.subscribe(MQTT_TOPIC)
+        client.subscribe(GENERATOR_TOPIC)
 
     def on_message(client, userdata, msg):
         print(msg.topic+" "+str(msg.payload))
+        # TODO renable when while loop is removed
+        #if msg.topic == GENERATOR_TOPIC:
+        #    client.publish(MQTT_TOPIC, json.dumps(generator(int(msg.payload))))
 
     print("MQTT Broker: " + MQTT_BROKER_HOST)
     print("MQTT ClientID: " + MQTT_CLIENT_ID)

@@ -16,8 +16,7 @@ def generate_time_value():
     time_value = float(time_value)
     return time_value
 
-def generate_palette(time_value=0.0, base_saturation=1.0, base_luminance=0.4, hue_modifier=0.03, lum_modifier=0.07, sat_modifier=0.2): 
-    base_hue = time_value / 3600
+def generate_palette(base_hue, base_saturation=1.0, base_luminance=0.4, hue_modifier=0.03, lum_modifier=0.07, sat_modifier=0.2):
     base_color = Color(hsl=(base_hue, base_saturation, base_luminance))        
     base_color_variant_1 = Color(hsl=(base_color.hue + hue_modifier, base_saturation - sat_modifier, base_luminance))
     base_color_variant_2 = Color(hsl=(base_color.hue - hue_modifier, base_saturation - sat_modifier, base_luminance))
@@ -34,7 +33,7 @@ def generate_palette(time_value=0.0, base_saturation=1.0, base_luminance=0.4, hu
     contrast_color = Color(hsl=(contrast_hue, base_saturation - sat_modifier, (base_luminance + 0.2)))
 
     p = dict()
-    p['time_value'] = time_value
+    p['base_hue'] = base_hue
     p['base_color'] = base_color
     p['base_color_variant_1'] = base_color_variant_1
     p['base_color_variant_2'] = base_color_variant_2
@@ -65,7 +64,6 @@ def pack_rgb(palette):
 
 def pack_hex(palette):
     p = dict()
-    p['t'] = palette['time_value']
     p['b'] = palette['base_color'].hex
     p['v1'] = palette['base_color_variant_1'].hex
     p['v2'] = palette['base_color_variant_2'].hex
@@ -74,8 +72,10 @@ def pack_hex(palette):
     p['c'] = palette['contrast_color'].hex
     return p
 
-def generate_scheme():
-    palette = generate_palette(time_value = generate_time_value())
+def generate_scheme(base_hue=0.0):
+    if base_hue == 0.0:
+        base_hue = generate_time_value() / 3600
+    palette = generate_palette(base_hue)
     if GENERATE_HTML:
         output.html(palette, HTML_OUTPUT_PATH)
     if SCHEME_FORMAT == "HEX":
