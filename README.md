@@ -13,19 +13,20 @@ Difference to c-base farbgeber:
 - generates the current scheme as HTML to /output/farbgeber.html
 - send the colors either as RGB array or Hex
 - MsgFlo support dropped for now (will be added again maybe)
+- some refactoring for customization and Python3 support
   
 ## Getting Started
 Create a .env file and configure your environment
 ```
+UPDATE_INTERVAL=60
+SCHEME_FORMAT=HEX
+GENERATE_HTML=1
+HTML_OUTPUT_PATH=/output/farbgeber.html
 MQTT_PUBLISHER=1
 MQTT_BROKER_HOST=broker
 MQTT_BROKER_PORT=1883
 MQTT_TOPIC=wirelos/farbgeber
 MQTT_CLIENT_ID=farbgeber
-UPDATE_INTERVAL=60
-SCHEME_FORMAT=HEX
-GENERATE_HTML=1
-HTML_OUTPUT_PATH=/output/farbgeber.html
 ```
 Build and Run with Docker:
 ```
