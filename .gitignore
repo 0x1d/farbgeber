@@ -114,5 +114,5 @@ com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
 
-output1.html
-esp8266/mqtt_client/config.h
+farbgeber.html
+.vscode

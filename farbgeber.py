@@ -13,14 +13,14 @@ def gen_time_value():
     return time_value
 
 def generate_terminal_output(palette):
-    print palette['time_value']
-    print "base_color ", palette['base_color'].hex
-    print "baseColorVariant1 ", palette['base_color_variant_1'].hex
-    print "baseColorVariant2 ", palette['base_color_variant_2'].hex
-    print "baseColorVariant3 ", palette['base_color_variant_3'].hex
-    print "baseColorVariant4 ", palette['base_color_variant_4'].hex
-    print "contrast_color ", palette['contrast_color'].hex
-    print "###################################"
+    print(palette['time_value'])
+    print("base_color ", palette['base_color'].hex)
+    print("baseColorVariant1 ", palette['base_color_variant_1'].hex)
+    print("baseColorVariant2 ", palette['base_color_variant_2'].hex)
+    print("baseColorVariant3 ", palette['base_color_variant_3'].hex)
+    print("baseColorVariant4 ", palette['base_color_variant_4'].hex)
+    print("contrast_color ", palette['contrast_color'].hex)
+    print("###################################")
 
 def generate_html_output(palette):
     time_value = palette['time_value']
@@ -49,7 +49,7 @@ def generate_html_output(palette):
     css4 = ".base_color_variant_3 { background-color:" + base_color_variant_3.hex + "; width:100%; height:40px; padding: 40px; font-size:20px; } \n\r"
     css5 = ".base_color_variant_4 { background-color:" + base_color_variant_4.hex + "; width:50%; height:40px; padding: 40px; font-size:20px; } \n\r"
     css6 = ".Contrastcolor { background-color:" + contrast_color.hex + "; width:10%; height:900px; position:absolute; right:300px; top:0px; color:" + base_color.hex + "; padding: 40px; font-size:20px; } \n"
-    f = open('/home/coon/public_html/farbgeber.html', 'w')
+    f = open('farbgeber.html', 'w')
     outputtxt = str(htmlpreface) + str(css1) + str(css2) + str(css3) + str(css4) + str(css5) + str(css6) + str(
         htmlcontent) + str(zeitzeile) + str(htmlclosing)
     f.write(outputtxt)
@@ -128,5 +128,5 @@ class Farbgeber(msgflo.Participant):
         self.send('palette', data)
 
 if __name__ == "__main__":
-    print "Zentrale Farbgebeeinheit"
+    print("Zentrale Farbgebeeinheit")
     msgflo.main(Farbgeber)
