@@ -14,6 +14,8 @@ Difference to c-base farbgeber:
 - send the colors either as RGB array or Hex
 - MsgFlo support dropped for now (will be added again maybe)
 - some refactoring for customization and Python3 support
+
+MQTT support will probably be removed again as broadcasting messages can easily be piped in CLI to mosquitto_pub.
   
 ## Getting Started
 Create a .env file and configure your environment
